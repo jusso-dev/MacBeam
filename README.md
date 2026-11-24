@@ -3,10 +3,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-iOS%2017%2B%20%7C%20iPadOS%2017%2B-0A84FF?style=flat-square&logo=apple" alt="Platform: iOS 17+ | iPadOS 17+" />
-  <img src="https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 6.0" />
-  <img src="https://img.shields.io/badge/Dependencies-Zero-34C759?style=flat-square" alt="Zero Dependencies" />
-  <img src="https://img.shields.io/badge/Protocol-RFB%203.8%20%2B%20Apple%20DH-5856D6?style=flat-square" alt="RFB 3.8 + Apple DH" />
+  <img src="docs/badges/platform.svg" alt="Platform: iOS 17+ · iPadOS 17+" />
+  <img src="docs/badges/swift.svg" alt="Swift 6.0" />
+  <img src="docs/badges/dependencies.svg" alt="Zero Dependencies" />
+  <img src="docs/badges/protocol.svg" alt="RFB 3.8 + Apple DH" />
 </p>
 
 **MacBeam** is a 100% native Swift **iOS & iPadOS** VNC client purpose-built for viewing and controlling your Macs via **macOS Screen Sharing** and standard **RFB / VNC** servers — with **zero third-party dependencies**.

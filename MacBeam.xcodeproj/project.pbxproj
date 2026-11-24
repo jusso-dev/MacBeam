@@ -1,0 +1,563 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0CC756442806F2811A7D97CD /* ConnectionLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03DF0C6A0639F99FC0F02170 /* ConnectionLibraryStore.swift */; };
+		0EF7635B4347A6ADA0B0D9F1 /* RFBClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B137575F3BEA4A872810AC /* RFBClient.swift */; };
+		10281A46FD5C7B11EB8F0BBE /* RFBCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4EA49020695592556ABADDC /* RFBCrypto.swift */; };
+		2CBD51F661C98C68AECB2236 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 09952FBF12D6F278278B735D /* libz.tbd */; };
+		3E3D7AA0BB96D8D0755AC5F8 /* MacBeamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467725566A7C23211E3B7E47 /* MacBeamApp.swift */; };
+		45DCBBC982592159F885D63C /* SetupGuideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6912574A72BD6A5499ACE2 /* SetupGuideSheet.swift */; };
+		47BCB834D7866033876B2BBF /* RFBTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98DA4EFBA9DEA2C16001A8A8 /* RFBTransport.swift */; };
+		4A0456D6DC7C1A6D37332AC6 /* RemoteDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2337A362C5222E481EE543D5 /* RemoteDisplayView.swift */; };
+		4D0009F9DFAEA89D0BE0E32D /* RemoteSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19DC7A806C686B89A729ADF /* RemoteSessionView.swift */; };
+		62A7BEEDA626847655519253 /* RFBTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5076C3E4B071EEE3A0C3A623 /* RFBTypes.swift */; };
+		731A19106893FC8C20F598F5 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F780F863389509EF5402B17A /* HomeView.swift */; };
+		79C63D7B2307E76932B29557 /* DemoMacServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0574335F1ABB8F439D8EDFAE /* DemoMacServer.swift */; };
+		7B32351C73C3D0AB01B68A09 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97511D3C3ED02FDE6B0A15D8 /* Assets.xcassets */; };
+		845F287DA445B7848F4A2D97 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 09952FBF12D6F278278B735D /* libz.tbd */; };
+		8B431AC17BD4B3B6799EDFF6 /* RFBFramebuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180AE7D0ACBA5C97E3A1D58A /* RFBFramebuffer.swift */; };
+		B77CDE1F7436ABD9DD7DD1D6 /* RFBZlibInflater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6585BEECA1E19DE29ED99B4D /* RFBZlibInflater.swift */; };
+		C2D09B16D436BF2B8345393C /* MacConnectionProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AA02E52D052EA9FE7FB814 /* MacConnectionProfile.swift */; };
+		C582A64F80E951058610E002 /* ConnectionEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F7CF74D3734EF4C0B30E74 /* ConnectionEditorSheet.swift */; };
+		D0B35F35238850A5D27ED33B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07B43EF60F5A4B67FEBF8022 /* KeychainStore.swift */; };
+		D58CDDAA6630BF8B3A421971 /* RFBProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3074C9B4CC73AB0E53D9C0F /* RFBProtocolTests.swift */; };
+		E621F0C140C5BD8ECE473735 /* BonjourDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DB238F9F2B768AC452C0A0 /* BonjourDiscovery.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8612484F9EF2D97480CABBFC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A7A1767AF14468EE2FE4BBBA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B71D831BFA2F5A8361C2FAC7;
+			remoteInfo = MacBeam;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		03DF0C6A0639F99FC0F02170 /* ConnectionLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionLibraryStore.swift; sourceTree = "<group>"; };
+		0574335F1ABB8F439D8EDFAE /* DemoMacServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMacServer.swift; sourceTree = "<group>"; };
+		07B43EF60F5A4B67FEBF8022 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		09952FBF12D6F278278B735D /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		0EE5039C72837F4A4268C53D /* MacBeam.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MacBeam.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		180AE7D0ACBA5C97E3A1D58A /* RFBFramebuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBFramebuffer.swift; sourceTree = "<group>"; };
+		2337A362C5222E481EE543D5 /* RemoteDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDisplayView.swift; sourceTree = "<group>"; };
+		467725566A7C23211E3B7E47 /* MacBeamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBeamApp.swift; sourceTree = "<group>"; };
+		4D77FFD94474D0D2DE3689DF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5076C3E4B071EEE3A0C3A623 /* RFBTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBTypes.swift; sourceTree = "<group>"; };
+		6585BEECA1E19DE29ED99B4D /* RFBZlibInflater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBZlibInflater.swift; sourceTree = "<group>"; };
+		65DCB81B2AD1CE041F72849F /* MacBeamTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MacBeamTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		97511D3C3ED02FDE6B0A15D8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		98DA4EFBA9DEA2C16001A8A8 /* RFBTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBTransport.swift; sourceTree = "<group>"; };
+		A3AA02E52D052EA9FE7FB814 /* MacConnectionProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacConnectionProfile.swift; sourceTree = "<group>"; };
+		C4EA49020695592556ABADDC /* RFBCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBCrypto.swift; sourceTree = "<group>"; };
+		CE6912574A72BD6A5499ACE2 /* SetupGuideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupGuideSheet.swift; sourceTree = "<group>"; };
+		D0DB238F9F2B768AC452C0A0 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscovery.swift; sourceTree = "<group>"; };
+		D19DC7A806C686B89A729ADF /* RemoteSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteSessionView.swift; sourceTree = "<group>"; };
+		E6F7CF74D3734EF4C0B30E74 /* ConnectionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditorSheet.swift; sourceTree = "<group>"; };
+		F3074C9B4CC73AB0E53D9C0F /* RFBProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBProtocolTests.swift; sourceTree = "<group>"; };
+		F5B137575F3BEA4A872810AC /* RFBClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBClient.swift; sourceTree = "<group>"; };
+		F780F863389509EF5402B17A /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6CD1CE4C9A467D5AF5C80FCF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				845F287DA445B7848F4A2D97 /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79778140411AC1449BB34D98 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2CBD51F661C98C68AECB2236 /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		12640946D0AED93D6A9C2356 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				97511D3C3ED02FDE6B0A15D8 /* Assets.xcassets */,
+				4D77FFD94474D0D2DE3689DF /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		3404CA8E11E536418B46568D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0EE5039C72837F4A4268C53D /* MacBeam.app */,
+				65DCB81B2AD1CE041F72849F /* MacBeamTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		581C2305DB359E7E124EC198 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				09952FBF12D6F278278B735D /* libz.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		699739866C4FEA51CBA0E578 /* MacBeam */ = {
+			isa = PBXGroup;
+			children = (
+				AB8EFA7547D0A33BE73970A4 /* App */,
+				FED52197E7B427A02C1D3496 /* Models */,
+				12640946D0AED93D6A9C2356 /* Resources */,
+				FEB728A6078BFADD588330ED /* RFB */,
+				EC1A0972262A582647BB1642 /* Views */,
+			);
+			path = MacBeam;
+			sourceTree = "<group>";
+		};
+		99CAE9FE35C9F168AA219673 = {
+			isa = PBXGroup;
+			children = (
+				699739866C4FEA51CBA0E578 /* MacBeam */,
+				FE234DD64C9B665ACF121D41 /* MacBeamTests */,
+				581C2305DB359E7E124EC198 /* Frameworks */,
+				3404CA8E11E536418B46568D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AB8EFA7547D0A33BE73970A4 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				467725566A7C23211E3B7E47 /* MacBeamApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		EC1A0972262A582647BB1642 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E6F7CF74D3734EF4C0B30E74 /* ConnectionEditorSheet.swift */,
+				F780F863389509EF5402B17A /* HomeView.swift */,
+				2337A362C5222E481EE543D5 /* RemoteDisplayView.swift */,
+				D19DC7A806C686B89A729ADF /* RemoteSessionView.swift */,
+				CE6912574A72BD6A5499ACE2 /* SetupGuideSheet.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		FE234DD64C9B665ACF121D41 /* MacBeamTests */ = {
+			isa = PBXGroup;
+			children = (
+				F3074C9B4CC73AB0E53D9C0F /* RFBProtocolTests.swift */,
+			);
+			path = MacBeamTests;
+			sourceTree = "<group>";
+		};
+		FEB728A6078BFADD588330ED /* RFB */ = {
+			isa = PBXGroup;
+			children = (
+				D0DB238F9F2B768AC452C0A0 /* BonjourDiscovery.swift */,
+				0574335F1ABB8F439D8EDFAE /* DemoMacServer.swift */,
+				F5B137575F3BEA4A872810AC /* RFBClient.swift */,
+				C4EA49020695592556ABADDC /* RFBCrypto.swift */,
+				180AE7D0ACBA5C97E3A1D58A /* RFBFramebuffer.swift */,
+				98DA4EFBA9DEA2C16001A8A8 /* RFBTransport.swift */,
+				5076C3E4B071EEE3A0C3A623 /* RFBTypes.swift */,
+				6585BEECA1E19DE29ED99B4D /* RFBZlibInflater.swift */,
+			);
+			path = RFB;
+			sourceTree = "<group>";
+		};
+		FED52197E7B427A02C1D3496 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				03DF0C6A0639F99FC0F02170 /* ConnectionLibraryStore.swift */,
+				07B43EF60F5A4B67FEBF8022 /* KeychainStore.swift */,
+				A3AA02E52D052EA9FE7FB814 /* MacConnectionProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		57E882B6B52CDF357ED7F766 /* MacBeamTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A680C59A2D055F61EAE927ED /* Build configuration list for PBXNativeTarget "MacBeamTests" */;
+			buildPhases = (
+				F8A63A59D4881415BF0AFB97 /* Sources */,
+				6CD1CE4C9A467D5AF5C80FCF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2026CC7259EADB83ED64F92F /* PBXTargetDependency */,
+			);
+			name = MacBeamTests;
+			packageProductDependencies = (
+			);
+			productName = MacBeamTests;
+			productReference = 65DCB81B2AD1CE041F72849F /* MacBeamTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B71D831BFA2F5A8361C2FAC7 /* MacBeam */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D583D69DF58A1A4D5180B8A /* Build configuration list for PBXNativeTarget "MacBeam" */;
+			buildPhases = (
+				69785740AEF49A95397D9ED1 /* Sources */,
+				11555C82CD62BDF569E8E9E3 /* Resources */,
+				79778140411AC1449BB34D98 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacBeam;
+			packageProductDependencies = (
+			);
+			productName = MacBeam;
+			productReference = 0EE5039C72837F4A4268C53D /* MacBeam.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A7A1767AF14468EE2FE4BBBA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					57E882B6B52CDF357ED7F766 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					B71D831BFA2F5A8361C2FAC7 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A4663BDEF31B299030174EA2 /* Build configuration list for PBXProject "MacBeam" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 99CAE9FE35C9F168AA219673;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3404CA8E11E536418B46568D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B71D831BFA2F5A8361C2FAC7 /* MacBeam */,
+				57E882B6B52CDF357ED7F766 /* MacBeamTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		11555C82CD62BDF569E8E9E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B32351C73C3D0AB01B68A09 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		69785740AEF49A95397D9ED1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E621F0C140C5BD8ECE473735 /* BonjourDiscovery.swift in Sources */,
+				C582A64F80E951058610E002 /* ConnectionEditorSheet.swift in Sources */,
+				0CC756442806F2811A7D97CD /* ConnectionLibraryStore.swift in Sources */,
+				79C63D7B2307E76932B29557 /* DemoMacServer.swift in Sources */,
+				731A19106893FC8C20F598F5 /* HomeView.swift in Sources */,
+				D0B35F35238850A5D27ED33B /* KeychainStore.swift in Sources */,
+				3E3D7AA0BB96D8D0755AC5F8 /* MacBeamApp.swift in Sources */,
+				C2D09B16D436BF2B8345393C /* MacConnectionProfile.swift in Sources */,
+				0EF7635B4347A6ADA0B0D9F1 /* RFBClient.swift in Sources */,
+				10281A46FD5C7B11EB8F0BBE /* RFBCrypto.swift in Sources */,
+				8B431AC17BD4B3B6799EDFF6 /* RFBFramebuffer.swift in Sources */,
+				47BCB834D7866033876B2BBF /* RFBTransport.swift in Sources */,
+				62A7BEEDA626847655519253 /* RFBTypes.swift in Sources */,
+				B77CDE1F7436ABD9DD7DD1D6 /* RFBZlibInflater.swift in Sources */,
+				4A0456D6DC7C1A6D37332AC6 /* RemoteDisplayView.swift in Sources */,
+				4D0009F9DFAEA89D0BE0E32D /* RemoteSessionView.swift in Sources */,
+				45DCBBC982592159F885D63C /* SetupGuideSheet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F8A63A59D4881415BF0AFB97 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D58CDDAA6630BF8B3A421971 /* RFBProtocolTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2026CC7259EADB83ED64F92F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B71D831BFA2F5A8361C2FAC7 /* MacBeam */;
+			targetProxy = 8612484F9EF2D97480CABBFC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1BF604338A459C85059757DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MacBeam/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.macbeam.app;
+				PRODUCT_NAME = MacBeam;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		636343C9CFDF7F661EAB2FBD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MacBeam/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.macbeam.app;
+				PRODUCT_NAME = MacBeam;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		80998A8A5202161D2A40728E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.macbeam.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacBeam.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MacBeam";
+			};
+			name = Debug;
+		};
+		A968C2A17D19AF5AE57608CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E73BFF0C84775164DC7B7D44 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F6C680053326FC25645E5A4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.macbeam.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacBeam.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MacBeam";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2D583D69DF58A1A4D5180B8A /* Build configuration list for PBXNativeTarget "MacBeam" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				636343C9CFDF7F661EAB2FBD /* Debug */,
+				1BF604338A459C85059757DE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A4663BDEF31B299030174EA2 /* Build configuration list for PBXProject "MacBeam" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E73BFF0C84775164DC7B7D44 /* Debug */,
+				A968C2A17D19AF5AE57608CB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A680C59A2D055F61EAE927ED /* Build configuration list for PBXNativeTarget "MacBeamTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				80998A8A5202161D2A40728E /* Debug */,
+				F6C680053326FC25645E5A4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A7A1767AF14468EE2FE4BBBA /* Project object */;
+}

@@ -7,6 +7,7 @@ struct RemoteSessionView: View {
     let onClose: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var client = RFBClient()
     @State private var demoServer: DemoMacVNCServer?
@@ -14,6 +15,8 @@ struct RemoteSessionView: View {
     @State private var canvasController = RemoteCanvasController()
 
     @State private var inputMode: PointerInputMode
+    @State private var isScrollMode = false
+    @State private var showShortcutsSheet = false
     @State private var isToolbarCollapsed = false
     @State private var isSoftwareKeyboardVisible = false
     @State private var keyboardOverlapHeight: CGFloat = 0
@@ -41,6 +44,11 @@ struct RemoteSessionView: View {
         _promptPassword = State(initialValue: target.initialCredentials.password)
     }
 
+    /// iPhone (and narrow iPad split view): fewer HUD buttons, shortcuts open as a sheet.
+    private var isCompact: Bool {
+        horizontalSizeClass == .compact
+    }
+
     private var showsModifierBar: Bool {
         client.state.isConnected && (showSpecialKeysBar || isSoftwareKeyboardVisible)
     }
@@ -52,6 +60,7 @@ struct RemoteSessionView: View {
             RemoteDisplayView(
                 client: client,
                 inputMode: inputMode,
+                isScrollMode: isScrollMode,
                 controller: canvasController,
                 activeModifiers: stickyModifiers,
                 bottomAccessoryInset: showsModifierBar ? 68 : 0,
@@ -108,6 +117,7 @@ struct RemoteSessionView: View {
         .statusBarHidden(client.state.isConnected)
         .persistentSystemOverlays(.hidden)
         .sensoryFeedback(.selection, trigger: inputMode)
+        .sensoryFeedback(.selection, trigger: isScrollMode)
         .sensoryFeedback(.selection, trigger: stickyModifiers)
         .onAppear {
             wireCallbacks()
@@ -134,6 +144,13 @@ struct RemoteSessionView: View {
         }
         .sheet(isPresented: $showCredentialsPrompt) {
             credentialsPromptSheet
+        }
+        .sheet(isPresented: $showShortcutsSheet) {
+            MacShortcutsSheet(
+                client: client,
+                stickyModifiers: $stickyModifiers,
+                onToast: showToast
+            )
         }
     }
 
@@ -220,18 +237,32 @@ struct RemoteSessionView: View {
 
                 Spacer(minLength: 2)
 
-                // Pointer Mode Toggle
+                // Pointer Mode Toggle (moved into the Actions menu on iPhone to save width)
+                if !isCompact {
+                    Button {
+                        togglePointerMode()
+                    } label: {
+                        hudCircleIcon(systemName: inputMode.systemImage, isActive: false)
+                    }
+                    .buttonStyle(.plain)
+                    .hoverEffect(.highlight)
+                    .accessibilityLabel("Pointer Mode")
+                    .accessibilityValue(inputMode.displayName)
+                    .accessibilityHint("Switches between virtual trackpad and direct touch")
+                }
+
+                // Scroll Mode Toggle
                 Button {
-                    inputMode = (inputMode == .trackpad) ? .directTouch : .trackpad
-                    showToast(inputMode == .trackpad ? "Trackpad Mode" : "Direct Touch Mode")
+                    toggleScrollMode()
                 } label: {
-                    hudCircleIcon(systemName: inputMode.systemImage, isActive: false)
+                    hudCircleIcon(systemName: "arrow.up.and.down.and.arrow.left.and.right", isActive: isScrollMode)
                 }
                 .buttonStyle(.plain)
                 .hoverEffect(.highlight)
-                .accessibilityLabel("Pointer Mode")
-                .accessibilityValue(inputMode.displayName)
-                .accessibilityHint("Switches between virtual trackpad and direct touch")
+                .accessibilityLabel("Scroll Mode")
+                .accessibilityValue(isScrollMode ? "On" : "Off")
+                .accessibilityHint("When on, drag one finger to scroll the Mac up, down, left or right")
+                .accessibilityAddTraits(isScrollMode ? .isSelected : [])
 
                 // Software Keyboard Toggle
                 Button {
@@ -250,22 +281,56 @@ struct RemoteSessionView: View {
                 .accessibilityValue(isSoftwareKeyboardVisible ? "Shown" : "Hidden")
                 .accessibilityAddTraits(isSoftwareKeyboardVisible ? .isSelected : [])
 
-                // Mac Shortcuts Bar Toggle
+                // Mac Shortcuts: full sheet on iPhone (every key visible), bottom bar on iPad
                 Button {
-                    withOptionalAnimation {
-                        showSpecialKeysBar.toggle()
+                    if isCompact {
+                        showShortcutsSheet = true
+                    } else {
+                        withOptionalAnimation {
+                            showSpecialKeysBar.toggle()
+                        }
                     }
                 } label: {
-                    hudCircleIcon(systemName: "command", isActive: showSpecialKeysBar)
+                    hudCircleIcon(systemName: "command", isActive: !isCompact && showSpecialKeysBar)
                 }
                 .buttonStyle(.plain)
                 .hoverEffect(.highlight)
-                .accessibilityLabel("Mac Shortcuts Bar")
-                .accessibilityValue(showSpecialKeysBar ? "Shown" : "Hidden")
-                .accessibilityAddTraits(showSpecialKeysBar ? .isSelected : [])
+                .accessibilityLabel("Mac Shortcuts")
+                .accessibilityValue(isCompact ? "" : (showSpecialKeysBar ? "Shown" : "Hidden"))
+                .accessibilityAddTraits(!isCompact && showSpecialKeysBar ? .isSelected : [])
 
                 // Session Actions Menu
                 Menu {
+                    Section("Controls") {
+                        Button {
+                            showShortcutsSheet = true
+                        } label: {
+                            Label("All Mac Shortcuts…", systemImage: "command")
+                        }
+                        Button {
+                            toggleScrollMode()
+                        } label: {
+                            Label(isScrollMode ? "Turn Off Scroll Mode" : "Turn On Scroll Mode", systemImage: "arrow.up.and.down.and.arrow.left.and.right")
+                        }
+                        Button {
+                            togglePointerMode()
+                        } label: {
+                            Label(
+                                inputMode == .trackpad ? "Switch to Direct Touch" : "Switch to Trackpad",
+                                systemImage: inputMode == .trackpad ? PointerInputMode.directTouch.systemImage : PointerInputMode.trackpad.systemImage
+                            )
+                        }
+                        if isCompact && client.state.isConnected {
+                            Button {
+                                withOptionalAnimation {
+                                    isToolbarCollapsed = true
+                                }
+                            } label: {
+                                Label("Minimize Toolbar", systemImage: "chevron.up")
+                            }
+                        }
+                    }
+
                     Section("Mac Shortcuts") {
                         Button {
                             client.sendKeyTap(keySym: RFBKeySym.space, modifiers: [RFBKeySym.macCommand])
@@ -343,8 +408,8 @@ struct RemoteSessionView: View {
                 .hoverEffect(.highlight)
                 .accessibilityLabel("Session Actions")
 
-                // Collapse HUD
-                if client.state.isConnected {
+                // Collapse HUD (in the Actions menu on iPhone)
+                if client.state.isConnected && !isCompact {
                     Button {
                         withOptionalAnimation {
                             isToolbarCollapsed = true
@@ -361,13 +426,25 @@ struct RemoteSessionView: View {
                     .accessibilityLabel("Minimize Toolbar")
                 }
             }
-            .padding(.horizontal, 6)
+            .padding(.horizontal, isCompact ? 2 : 6)
             .padding(.vertical, 4)
             .background(.ultraThinMaterial, in: Capsule())
             .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.75))
             .frame(maxWidth: 720)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
+    }
+
+    private func togglePointerMode() {
+        inputMode = (inputMode == .trackpad) ? .directTouch : .trackpad
+        showToast(inputMode == .trackpad ? "Trackpad Mode" : "Direct Touch Mode")
+    }
+
+    private func toggleScrollMode() {
+        isScrollMode.toggle()
+        showToast(isScrollMode
+            ? "Scroll Mode on: drag to scroll, two fingers to pan"
+            : "Scroll Mode off")
     }
 
     private func hudCircleIcon(systemName: String, isActive: Bool) -> some View {
@@ -387,7 +464,7 @@ struct RemoteSessionView: View {
 
     private var macModifierKeyBar: some View {
         HStack(spacing: 4) {
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal, showsIndicators: true) {
                 HStack(spacing: 6) {
                     modifierChip("⌘", spokenName: "Command", keySym: RFBKeySym.macCommand)
                     modifierChip("⌥", spokenName: "Option", keySym: RFBKeySym.macOption)
@@ -428,6 +505,19 @@ struct RemoteSessionView: View {
             Divider()
                 .frame(height: 28)
                 .overlay(.white.opacity(0.22))
+
+            Button {
+                showShortcutsSheet = true
+            } label: {
+                Image(systemName: "square.grid.2x2")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .hoverEffect(.highlight)
+            .accessibilityLabel("All Mac Shortcuts")
 
             Button {
                 canvasController.setKeyboardVisible(false)

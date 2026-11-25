@@ -16,6 +16,7 @@
 		47BCB834D7866033876B2BBF /* RFBTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98DA4EFBA9DEA2C16001A8A8 /* RFBTransport.swift */; };
 		4A0456D6DC7C1A6D37332AC6 /* RemoteDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2337A362C5222E481EE543D5 /* RemoteDisplayView.swift */; };
 		4D0009F9DFAEA89D0BE0E32D /* RemoteSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19DC7A806C686B89A729ADF /* RemoteSessionView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* MacShortcutsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* MacShortcutsSheet.swift */; };
 		62A7BEEDA626847655519253 /* RFBTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5076C3E4B071EEE3A0C3A623 /* RFBTypes.swift */; };
 		731A19106893FC8C20F598F5 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F780F863389509EF5402B17A /* HomeView.swift */; };
 		79C63D7B2307E76932B29557 /* DemoMacServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0574335F1ABB8F439D8EDFAE /* DemoMacServer.swift */; };
@@ -45,7 +46,7 @@
 		0574335F1ABB8F439D8EDFAE /* DemoMacServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMacServer.swift; sourceTree = "<group>"; };
 		07B43EF60F5A4B67FEBF8022 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		09952FBF12D6F278278B735D /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
-		0EE5039C72837F4A4268C53D /* MacBeam.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MacBeam.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0EE5039C72837F4A4268C53D /* MacBeam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacBeam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		180AE7D0ACBA5C97E3A1D58A /* RFBFramebuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBFramebuffer.swift; sourceTree = "<group>"; };
 		2337A362C5222E481EE543D5 /* RemoteDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDisplayView.swift; sourceTree = "<group>"; };
 		467725566A7C23211E3B7E47 /* MacBeamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBeamApp.swift; sourceTree = "<group>"; };
@@ -60,6 +61,7 @@
 		CE6912574A72BD6A5499ACE2 /* SetupGuideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupGuideSheet.swift; sourceTree = "<group>"; };
 		D0DB238F9F2B768AC452C0A0 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscovery.swift; sourceTree = "<group>"; };
 		D19DC7A806C686B89A729ADF /* RemoteSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteSessionView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* MacShortcutsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacShortcutsSheet.swift; sourceTree = "<group>"; };
 		E6F7CF74D3734EF4C0B30E74 /* ConnectionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditorSheet.swift; sourceTree = "<group>"; };
 		F3074C9B4CC73AB0E53D9C0F /* RFBProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBProtocolTests.swift; sourceTree = "<group>"; };
 		F5B137575F3BEA4A872810AC /* RFBClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFBClient.swift; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				F780F863389509EF5402B17A /* HomeView.swift */,
 				2337A362C5222E481EE543D5 /* RemoteDisplayView.swift */,
 				D19DC7A806C686B89A729ADF /* RemoteSessionView.swift */,
+				A1B2C3D4E5F60718293A4B5D /* MacShortcutsSheet.swift */,
 				CE6912574A72BD6A5499ACE2 /* SetupGuideSheet.swift */,
 			);
 			path = Views;
@@ -242,7 +245,6 @@
 						ProvisioningStyle = Automatic;
 					};
 					B71D831BFA2F5A8361C2FAC7 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -299,6 +301,7 @@
 				B77CDE1F7436ABD9DD7DD1D6 /* RFBZlibInflater.swift in Sources */,
 				4A0456D6DC7C1A6D37332AC6 /* RemoteDisplayView.swift in Sources */,
 				4D0009F9DFAEA89D0BE0E32D /* RemoteSessionView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* MacShortcutsSheet.swift in Sources */,
 				45DCBBC982592159F885D63C /* SetupGuideSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -329,11 +332,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 83ZX28V765;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacBeam/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.macbeam.app;
 				PRODUCT_NAME = MacBeam;
@@ -349,11 +356,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 83ZX28V765;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacBeam/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.macbeam.app;
 				PRODUCT_NAME = MacBeam;

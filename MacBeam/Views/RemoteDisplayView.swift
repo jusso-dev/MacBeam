@@ -26,6 +26,7 @@ final class RemoteCanvasController {
 struct RemoteDisplayView: UIViewRepresentable {
     let client: RFBClient
     let inputMode: PointerInputMode
+    let isScrollMode: Bool
     let controller: RemoteCanvasController
     let activeModifiers: Set<UInt32>
     let bottomAccessoryInset: CGFloat
@@ -36,6 +37,7 @@ struct RemoteDisplayView: UIViewRepresentable {
         let view = RemoteCanvasView()
         view.client = client
         view.inputMode = inputMode
+        view.isScrollMode = isScrollMode
         view.bottomAccessoryInset = bottomAccessoryInset
         view.activeModifiersProvider = { activeModifiers }
         view.onConsumeStickyModifiers = onConsumeStickyModifiers
@@ -47,6 +49,7 @@ struct RemoteDisplayView: UIViewRepresentable {
     func updateUIView(_ uiView: RemoteCanvasView, context: Context) {
         uiView.client = client
         uiView.inputMode = inputMode
+        uiView.isScrollMode = isScrollMode
         uiView.bottomAccessoryInset = bottomAccessoryInset
         uiView.activeModifiersProvider = { activeModifiers }
         uiView.onConsumeStickyModifiers = onConsumeStickyModifiers
@@ -71,6 +74,15 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     weak var client: RFBClient?
     var inputMode: PointerInputMode = .trackpad {
         didSet { updateCursorLayers() }
+    }
+    /// When enabled, a one-finger drag scrolls the remote Mac (both axes, with momentum)
+    /// and a two-finger drag pans the zoomed viewport. Designed for small iPhone screens.
+    var isScrollMode = false {
+        didSet {
+            guard oldValue != isScrollMode else { return }
+            longPressRecognizer?.isEnabled = !isScrollMode
+            stopScrollMomentum()
+        }
     }
     var bottomAccessoryInset: CGFloat = 0 {
         didSet {
@@ -105,6 +117,17 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     private var lastPanLocation: CGPoint = .zero
     private var scrollAccumulatorY: CGFloat = 0
     private var scrollAccumulatorX: CGFloat = 0
+    private weak var longPressRecognizer: UILongPressGestureRecognizer?
+
+    // Scroll momentum (keeps flick-scrolling natural on iPhone)
+    private var momentumLink: CADisplayLink?
+    private var momentumVelocity: CGPoint = .zero
+    private var momentumLastTimestamp: CFTimeInterval = 0
+    private let scrollStepThreshold: CGFloat = 12
+    private var isTwoFingerViewportPan = false
+    private var scrollGestureUsesTouches = false
+    private enum ScrollAxisLock { case vertical, horizontal, free }
+    private var scrollAxisLock: ScrollAxisLock?
 
     // Keyboard avoidance & hardware key tracking (prevents stuck keys on modifier release)
     private var keyboardOverlapHeight: CGFloat = 0
@@ -240,6 +263,7 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
         longPress.allowedTouchTypes = [directTouchType]
         singleTap.require(toFail: longPress)
         addGestureRecognizer(longPress)
+        longPressRecognizer = longPress
 
         // 6. Hardware mouse/trackpad click-and-drag (preserves primary/secondary button mask throughout drag)
         let pointerDrag = UIPanGestureRecognizer(target: self, action: #selector(handleIndirectPointerDrag(_:)))
@@ -545,6 +569,11 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     }
 
     @objc private func handleOneFingerPan(_ gesture: UIPanGestureRecognizer) {
+        if isScrollMode {
+            handleOneFingerScroll(gesture)
+            return
+        }
+
         let translation = gesture.translation(in: self)
         gesture.setTranslation(.zero, in: self)
 
@@ -596,34 +625,172 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
 
     @objc private func handleScrollPan(_ gesture: UIPanGestureRecognizer) {
         guard !isPinching else {
-            scrollAccumulatorX = 0
-            scrollAccumulatorY = 0
+            resetScrollAccumulators()
             gesture.setTranslation(.zero, in: self)
             return
         }
 
-        if gesture.state == .cancelled || gesture.state == .ended || gesture.state == .failed {
-            scrollAccumulatorX = 0
-            scrollAccumulatorY = 0
+        // Scroll Mode: two fingers move the zoomed viewport (one finger already scrolls the Mac).
+        // Indirect scroll-wheel input reports zero touches and always scrolls the Mac.
+        if gesture.state == .began {
+            isTwoFingerViewportPan = isScrollMode && userZoomScale > 1.02 && gesture.numberOfTouches >= 2
+        }
+        if isTwoFingerViewportPan {
+            let translation = gesture.translation(in: self)
+            gesture.setTranslation(.zero, in: self)
+            panOffset.x += translation.x
+            panOffset.y += translation.y
+            layoutScreenLayer()
+            if gesture.state == .ended || gesture.state == .cancelled || gesture.state == .failed {
+                isTwoFingerViewportPan = false
+            }
             return
         }
 
-        let delta = gesture.translation(in: self)
-        gesture.setTranslation(.zero, in: self)
+        switch gesture.state {
+        case .began:
+            stopScrollMomentum()
+            resetScrollAccumulators()
+            // Mouse wheels / trackpads report zero touches; only finger flicks get momentum.
+            scrollGestureUsesTouches = gesture.numberOfTouches >= 2
+        case .changed:
+            let delta = gesture.translation(in: self)
+            gesture.setTranslation(.zero, in: self)
+            emitScrollSteps(dx: delta.x, dy: delta.y)
+        case .ended:
+            if scrollGestureUsesTouches {
+                startScrollMomentum(velocity: gesture.velocity(in: self))
+            } else {
+                resetScrollAccumulators()
+            }
+        default:
+            resetScrollAccumulators()
+        }
+    }
 
-        scrollAccumulatorY += delta.y
-        scrollAccumulatorX += delta.x
+    /// Scroll Mode one-finger drag: natural-direction scrolling of the remote Mac in both axes.
+    /// Mostly-straight drags lock to one axis so vertical scrolls don't drift sideways.
+    private func handleOneFingerScroll(_ gesture: UIPanGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            stopScrollMomentum()
+            resetScrollAccumulators()
+            scrollAxisLock = nil
+            if inputMode == .directTouch {
+                // Scroll whatever is under the finger, like a native iOS scroll view.
+                cursorPoint = viewPointToRemotePoint(gesture.location(in: self))
+                clampCursor()
+                updateCursorLayerPosition()
+                client?.sendPointerEvent(x: Int(cursorPoint.x), y: Int(cursorPoint.y), buttons: [])
+            }
+            fallthrough
+        case .changed:
+            let delta = gesture.translation(in: self)
+            gesture.setTranslation(.zero, in: self)
+            if scrollAxisLock == nil {
+                let total = CGPoint(x: abs(scrollAccumulatorX + delta.x), y: abs(scrollAccumulatorY + delta.y))
+                if max(total.x, total.y) >= 6 {
+                    if total.y > total.x * 2 {
+                        scrollAxisLock = .vertical
+                    } else if total.x > total.y * 2 {
+                        scrollAxisLock = .horizontal
+                    } else {
+                        scrollAxisLock = .free
+                    }
+                }
+            }
+            emitScrollSteps(dx: lockedDelta(delta).x, dy: lockedDelta(delta).y)
+        case .ended:
+            startScrollMomentum(velocity: lockedDelta(gesture.velocity(in: self)))
+        default:
+            resetScrollAccumulators()
+        }
+    }
 
-        let stepThreshold: CGFloat = 14
-        while abs(scrollAccumulatorY) >= stepThreshold {
+    private func lockedDelta(_ delta: CGPoint) -> CGPoint {
+        switch scrollAxisLock {
+        case .vertical: return CGPoint(x: 0, y: delta.y)
+        case .horizontal: return CGPoint(x: delta.x, y: 0)
+        case .free, nil: return delta
+        }
+    }
+
+    private func resetScrollAccumulators() {
+        scrollAccumulatorX = 0
+        scrollAccumulatorY = 0
+    }
+
+    /// Converts finger travel (view points) into discrete RFB wheel ticks.
+    private func emitScrollSteps(dx: CGFloat, dy: CGFloat) {
+        scrollAccumulatorY += dy
+        scrollAccumulatorX += dx
+
+        while abs(scrollAccumulatorY) >= scrollStepThreshold {
             let btn: RFBPointerButton = scrollAccumulatorY > 0 ? .scrollUp : .scrollDown
             client?.sendScroll(x: Int(cursorPoint.x), y: Int(cursorPoint.y), button: btn)
-            scrollAccumulatorY += scrollAccumulatorY > 0 ? -stepThreshold : stepThreshold
+            scrollAccumulatorY += scrollAccumulatorY > 0 ? -scrollStepThreshold : scrollStepThreshold
         }
-        while abs(scrollAccumulatorX) >= stepThreshold {
+        while abs(scrollAccumulatorX) >= scrollStepThreshold {
             let btn: RFBPointerButton = scrollAccumulatorX > 0 ? .scrollLeft : .scrollRight
             client?.sendScroll(x: Int(cursorPoint.x), y: Int(cursorPoint.y), button: btn)
-            scrollAccumulatorX += scrollAccumulatorX > 0 ? -stepThreshold : stepThreshold
+            scrollAccumulatorX += scrollAccumulatorX > 0 ? -scrollStepThreshold : scrollStepThreshold
+        }
+    }
+
+    // MARK: - Scroll Momentum
+
+    private func startScrollMomentum(velocity: CGPoint) {
+        stopScrollMomentum()
+        let maxSpeed: CGFloat = 2400
+        let v = CGPoint(
+            x: max(-maxSpeed, min(maxSpeed, velocity.x)),
+            y: max(-maxSpeed, min(maxSpeed, velocity.y))
+        )
+        guard hypot(v.x, v.y) > 250, !UIAccessibility.isReduceMotionEnabled else {
+            resetScrollAccumulators()
+            return
+        }
+        momentumVelocity = v
+        momentumLastTimestamp = 0
+        let link = CADisplayLink(target: self, selector: #selector(stepScrollMomentum(_:)))
+        link.add(to: .main, forMode: .common)
+        momentumLink = link
+    }
+
+    @objc private func stepScrollMomentum(_ link: CADisplayLink) {
+        guard momentumLastTimestamp > 0 else {
+            momentumLastTimestamp = link.timestamp
+            return
+        }
+        let dt = min(1.0 / 30.0, link.timestamp - momentumLastTimestamp)
+        momentumLastTimestamp = link.timestamp
+
+        emitScrollSteps(dx: momentumVelocity.x * dt, dy: momentumVelocity.y * dt)
+
+        let decay = pow(0.94, dt * 60)
+        momentumVelocity.x *= decay
+        momentumVelocity.y *= decay
+        if hypot(momentumVelocity.x, momentumVelocity.y) < 40 {
+            stopScrollMomentum()
+        }
+    }
+
+    private func stopScrollMomentum() {
+        momentumLink?.invalidate()
+        momentumLink = nil
+        momentumVelocity = .zero
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // Any new touch catches an in-flight momentum scroll, matching iOS behaviour.
+        stopScrollMomentum()
+        super.touchesBegan(touches, with: event)
+    }
+
+    override func willMove(toWindow newWindow: UIWindow?) {
+        super.willMove(toWindow: newWindow)
+        if newWindow == nil {
+            stopScrollMomentum()
         }
     }
 

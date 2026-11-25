@@ -18,6 +18,10 @@ struct RemoteSessionView: View {
     @State private var isScrollMode = false
     @State private var showShortcutsSheet = false
     @State private var isToolbarCollapsed = false
+    /// Where the hidden-toolbar handle sits, as a fraction of the screen (persisted, draggable).
+    @AppStorage("toolbarHandleX") private var toolbarHandleX: Double = 0.92
+    @AppStorage("toolbarHandleY") private var toolbarHandleY: Double = 0.04
+    @State private var toolbarHandleDrag: CGSize = .zero
     @State private var isSoftwareKeyboardVisible = false
     @State private var keyboardOverlapHeight: CGFloat = 0
     @State private var showSpecialKeysBar = false
@@ -113,6 +117,13 @@ struct RemoteSessionView: View {
                         .environment(\.colorScheme, .dark)
                 }
             }
+
+            // Hidden toolbar: only a small, faded, draggable handle remains so nothing covers the Mac.
+            if isToolbarCollapsed && client.state.isConnected {
+                collapsedToolbarHandle
+                    .environment(\.colorScheme, .dark)
+                    .transition(.opacity)
+            }
         }
         .statusBarHidden(client.state.isConnected)
         .persistentSystemOverlays(.hidden)
@@ -159,37 +170,7 @@ struct RemoteSessionView: View {
     @ViewBuilder
     private var topHUD: some View {
         if isToolbarCollapsed && client.state.isConnected {
-            HStack {
-                Spacer()
-                Button {
-                    withOptionalAnimation {
-                        isToolbarCollapsed = false
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(.green)
-                            .frame(width: 7, height: 7)
-                        Text(client.stats.serverName.isEmpty ? target.title : client.stats.serverName)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(1)
-                        Image(systemName: "chevron.down")
-                            .font(.caption2.weight(.bold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: 44)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.75))
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .hoverEffect(.highlight)
-                .accessibilityLabel("Expand Toolbar")
-                .accessibilityHint("Shows session controls and Mac shortcuts")
-                Spacer()
-            }
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+            EmptyView()
         } else {
             HStack(spacing: 6) {
                 // Disconnect
@@ -320,13 +301,11 @@ struct RemoteSessionView: View {
                                 systemImage: inputMode == .trackpad ? PointerInputMode.directTouch.systemImage : PointerInputMode.trackpad.systemImage
                             )
                         }
-                        if isCompact && client.state.isConnected {
+                        if client.state.isConnected {
                             Button {
-                                withOptionalAnimation {
-                                    isToolbarCollapsed = true
-                                }
+                                hideToolbar()
                             } label: {
-                                Label("Minimize Toolbar", systemImage: "chevron.up")
+                                Label("Hide Toolbar", systemImage: "chevron.up")
                             }
                         }
                     }
@@ -408,22 +387,21 @@ struct RemoteSessionView: View {
                 .hoverEffect(.highlight)
                 .accessibilityLabel("Session Actions")
 
-                // Collapse HUD (in the Actions menu on iPhone)
-                if client.state.isConnected && !isCompact {
+                // Hide Toolbar
+                if client.state.isConnected {
                     Button {
-                        withOptionalAnimation {
-                            isToolbarCollapsed = true
-                        }
+                        hideToolbar()
                     } label: {
                         Image(systemName: "chevron.up")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(.white.opacity(0.88))
-                            .frame(width: 44, height: 44)
-                            .contentShape(Circle())
+                            .frame(width: isCompact ? 36 : 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .hoverEffect(.highlight)
-                    .accessibilityLabel("Minimize Toolbar")
+                    .accessibilityLabel("Hide Toolbar")
+                    .accessibilityHint("Leaves a small button you can drag anywhere and tap to bring the toolbar back")
                 }
             }
             .padding(.horizontal, isCompact ? 2 : 6)
@@ -433,6 +411,75 @@ struct RemoteSessionView: View {
             .frame(maxWidth: 720)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
+    }
+
+    private func hideToolbar() {
+        withOptionalAnimation {
+            isToolbarCollapsed = true
+        }
+        showToast("Toolbar hidden: tap the small button to show it, drag to move it")
+    }
+
+    private var collapsedToolbarHandle: some View {
+        GeometryReader { geo in
+            let size = geo.size
+            let margin: CGFloat = 24
+            let isDragging = toolbarHandleDrag != .zero
+            let position = clampedHandlePosition(
+                x: toolbarHandleX * size.width + toolbarHandleDrag.width,
+                y: toolbarHandleY * size.height + toolbarHandleDrag.height,
+                in: size,
+                margin: margin
+            )
+
+            Image(systemName: "chevron.down")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 0.75))
+                .opacity(isDragging ? 0.95 : 0.5)
+                .scaleEffect(isDragging ? 1.15 : 1)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+                .hoverEffect(.highlight)
+                .onTapGesture {
+                    withOptionalAnimation {
+                        isToolbarCollapsed = false
+                    }
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 6, coordinateSpace: .global)
+                        .onChanged { value in
+                            toolbarHandleDrag = value.translation
+                        }
+                        .onEnded { value in
+                            let end = clampedHandlePosition(
+                                x: toolbarHandleX * size.width + value.translation.width,
+                                y: toolbarHandleY * size.height + value.translation.height,
+                                in: size,
+                                margin: margin
+                            )
+                            toolbarHandleX = Double(end.x / max(1, size.width))
+                            toolbarHandleY = Double(end.y / max(1, size.height))
+                            toolbarHandleDrag = .zero
+                        }
+                )
+                .position(position)
+                .accessibilityElement()
+                .accessibilityLabel("Show Toolbar")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction {
+                    isToolbarCollapsed = false
+                }
+        }
+    }
+
+    private func clampedHandlePosition(x: CGFloat, y: CGFloat, in size: CGSize, margin: CGFloat) -> CGPoint {
+        CGPoint(
+            x: min(max(margin, x), max(margin, size.width - margin)),
+            y: min(max(margin, y), max(margin, size.height - margin))
+        )
     }
 
     private func togglePointerMode() {

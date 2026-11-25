@@ -17,6 +17,7 @@ struct RemoteSessionView: View {
     @State private var inputMode: PointerInputMode
     @State private var isScrollMode = false
     @AppStorage("pointerSize") private var pointerSize: PointerSize = .large
+    @AppStorage("scrollSpeed") private var scrollSpeed: ScrollSpeed = .fast
     @State private var showShortcutsSheet = false
     @State private var isToolbarCollapsed = false
     /// Where the hidden-toolbar handle sits, as a fraction of the screen (persisted, draggable).
@@ -67,6 +68,7 @@ struct RemoteSessionView: View {
                 inputMode: inputMode,
                 isScrollMode: isScrollMode,
                 pointerSize: pointerSize,
+                scrollSpeed: scrollSpeed,
                 controller: canvasController,
                 activeModifiers: stickyModifiers,
                 bottomAccessoryInset: showsModifierBar ? 68 : 0,
@@ -310,6 +312,17 @@ struct RemoteSessionView: View {
                                 Label("Hide Toolbar", systemImage: "chevron.up")
                             }
                         }
+                    }
+
+                    Section("Scrolling") {
+                        Picker(selection: $scrollSpeed) {
+                            ForEach(ScrollSpeed.allCases) { speed in
+                                Text(speed.displayName).tag(speed)
+                            }
+                        } label: {
+                            Label("Scroll Speed", systemImage: "gauge.with.dots.needle.67percent")
+                        }
+                        .pickerStyle(.menu)
                     }
 
                     Section("Pointer") {

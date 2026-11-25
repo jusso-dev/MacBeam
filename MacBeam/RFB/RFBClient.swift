@@ -60,7 +60,9 @@ public final class RFBClient {
 
     public private(set) var state: RFBConnectionState = .idle
     public private(set) var stats = RFBSessionStats()
-    public private(set) var currentImage: CGImage?
+    /// Not observed: frames go straight to the canvas through `frameSink`, so SwiftUI
+    /// does not re-render the session UI for every frame.
+    @ObservationIgnored public private(set) var currentImage: CGImage?
     public private(set) var remoteCursor: RFBCursor?
     public private(set) var hasServerCursorUpdate = false
     public private(set) var cursorGeneration: UInt64 = 0
@@ -68,7 +70,11 @@ public final class RFBClient {
     public private(set) var lastBellTimestamp: Date?
 
     /// Incremented whenever `currentImage` updates, allowing fast UIKit/CALayer redraws.
-    public private(set) var frameGeneration: UInt64 = 0
+    @ObservationIgnored public private(set) var frameGeneration: UInt64 = 0
+
+    /// Fast path for the display layer: called on the main actor for every new frame.
+    @ObservationIgnored public var frameSink: ((CGImage, UInt64) -> Void)?
+    @ObservationIgnored private var lastStatsPublish = Date.distantPast
 
     public var onFrameUpdated: ((CGImage) -> Void)?
     public var onServerCutText: ((String) -> Void)?
@@ -325,7 +331,16 @@ public final class RFBClient {
             currentFramebufferHeight = fbHeight
             currentImage = image
             frameGeneration &+= 1
-            stats = updatedStats
+            // Publish stats (which SwiftUI observes) only when something visible changed, or once a second.
+            let now = Date()
+            if updatedStats.serverName != stats.serverName
+                || updatedStats.resolution != stats.resolution
+                || updatedStats.lastEncoding != stats.lastEncoding
+                || now.timeIntervalSince(lastStatsPublish) >= 1 {
+                stats = updatedStats
+                lastStatsPublish = now
+            }
+            frameSink?(image, frameGeneration)
             onFrameUpdated?(image)
         case .cursorUpdated(let cursor):
             remoteCursor = cursor
@@ -773,6 +788,17 @@ private final class RFBSessionWorker {
                 }
 
                 stats.lastEncoding = lastEncodingName
+
+                // Ask for the next update *before* building and handing off this frame, so the
+                // Mac encodes the next frame while we display this one (halves scroll latency).
+                enqueuePacket(RFBClient.makeFramebufferUpdateRequest(
+                    incremental: !resizeOccurred,
+                    x: 0,
+                    y: 0,
+                    width: framebuffer.width,
+                    height: framebuffer.height
+                ))
+
                 if frameChanged, let cgImage = framebuffer.makeCGImage() {
                     stats.totalFrames += 1
                     framesInWindow += 1
@@ -787,14 +813,6 @@ private final class RFBSessionWorker {
                 } else if resizeOccurred {
                     await onEvent(.metadataUpdated(stats, framebuffer.width, framebuffer.height))
                 }
-
-                enqueuePacket(RFBClient.makeFramebufferUpdateRequest(
-                    incremental: !resizeOccurred,
-                    x: 0,
-                    y: 0,
-                    width: framebuffer.width,
-                    height: framebuffer.height
-                ))
 
             case 1:
                 // SetColourMapEntries

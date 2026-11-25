@@ -32,6 +32,7 @@ struct RemoteDisplayView: UIViewRepresentable {
     let inputMode: PointerInputMode
     let isScrollMode: Bool
     let pointerSize: PointerSize
+    let scrollSpeed: ScrollSpeed
     let controller: RemoteCanvasController
     let activeModifiers: Set<UInt32>
     let bottomAccessoryInset: CGFloat
@@ -44,6 +45,11 @@ struct RemoteDisplayView: UIViewRepresentable {
         view.inputMode = inputMode
         view.isScrollMode = isScrollMode
         view.pointerSize = pointerSize
+        view.scrollSpeed = scrollSpeed
+        attachFrameSink(to: view)
+        if let image = client.currentImage {
+            view.updateFramebuffer(image: image, generation: client.frameGeneration)
+        }
         view.bottomAccessoryInset = bottomAccessoryInset
         view.activeModifiersProvider = { activeModifiers }
         view.onConsumeStickyModifiers = onConsumeStickyModifiers
@@ -57,20 +63,26 @@ struct RemoteDisplayView: UIViewRepresentable {
         uiView.inputMode = inputMode
         uiView.isScrollMode = isScrollMode
         uiView.pointerSize = pointerSize
+        uiView.scrollSpeed = scrollSpeed
         uiView.bottomAccessoryInset = bottomAccessoryInset
         uiView.activeModifiersProvider = { activeModifiers }
         uiView.onConsumeStickyModifiers = onConsumeStickyModifiers
         uiView.onSoftwareKeyboardChanged = onSoftwareKeyboardChanged
         controller.canvasView = uiView
+        attachFrameSink(to: uiView)
 
-        if let image = client.currentImage {
-            uiView.updateFramebuffer(image: image, generation: client.frameGeneration)
-        }
         uiView.updateRemoteCursor(
             cursor: client.remoteCursor,
             hasServerUpdate: client.hasServerCursorUpdate,
             generation: client.cursorGeneration
         )
+    }
+
+    /// Frames bypass SwiftUI entirely and go straight to the CALayer.
+    private func attachFrameSink(to view: RemoteCanvasView) {
+        client.frameSink = { [weak view] image, generation in
+            view?.updateFramebuffer(image: image, generation: generation)
+        }
     }
 }
 
@@ -82,6 +94,7 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     var inputMode: PointerInputMode = .trackpad {
         didSet { updateCursorLayers() }
     }
+    var scrollSpeed: ScrollSpeed = .fast
     var pointerSize: PointerSize = .large {
         didSet {
             if oldValue != pointerSize { updateCursorLayers() }
@@ -136,11 +149,16 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     private var momentumLink: CADisplayLink?
     private var momentumVelocity: CGPoint = .zero
     private var momentumLastTimestamp: CFTimeInterval = 0
-    private let scrollStepThreshold: CGFloat = 12
+    /// Approximate Mac pixels moved by one RFB wheel tick at Normal speed.
+    private let remotePixelsPerScrollTick: CGFloat = 36
+    /// Cap per call so a huge flick can't flood the connection.
+    private let maxScrollTicksPerStep = 24
+    private var lastScrollSpeed: CGFloat = 0
     private var isTwoFingerViewportPan = false
     private var scrollGestureUsesTouches = false
     private enum ScrollAxisLock { case vertical, horizontal, free }
     private var scrollAxisLock: ScrollAxisLock?
+    private var axisLockTravel: CGPoint = .zero
 
     // Keyboard avoidance & hardware key tracking (prevents stuck keys on modifier release)
     private var keyboardOverlapHeight: CGFloat = 0
@@ -738,6 +756,8 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
         case .changed:
             let delta = gesture.translation(in: self)
             gesture.setTranslation(.zero, in: self)
+            let v = gesture.velocity(in: self)
+            lastScrollSpeed = hypot(v.x, v.y)
             emitScrollSteps(dx: delta.x, dy: delta.y)
         case .ended:
             if scrollGestureUsesTouches {
@@ -758,6 +778,7 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
             stopScrollMomentum()
             resetScrollAccumulators()
             scrollAxisLock = nil
+            axisLockTravel = .zero
             if inputMode == .directTouch {
                 // Scroll whatever is under the finger, like a native iOS scroll view.
                 cursorPoint = viewPointToRemotePoint(gesture.location(in: self))
@@ -769,8 +790,12 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
         case .changed:
             let delta = gesture.translation(in: self)
             gesture.setTranslation(.zero, in: self)
+            let v = gesture.velocity(in: self)
+            lastScrollSpeed = hypot(v.x, v.y)
             if scrollAxisLock == nil {
-                let total = CGPoint(x: abs(scrollAccumulatorX + delta.x), y: abs(scrollAccumulatorY + delta.y))
+                axisLockTravel.x += abs(delta.x)
+                axisLockTravel.y += abs(delta.y)
+                let total = axisLockTravel
                 if max(total.x, total.y) >= 6 {
                     if total.y > total.x * 2 {
                         scrollAxisLock = .vertical
@@ -803,32 +828,46 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     }
 
     /// Converts finger travel (view points) into discrete RFB wheel ticks.
-    private func emitScrollSteps(dx: CGFloat, dy: CGFloat) {
-        scrollAccumulatorY += dy
-        scrollAccumulatorX += dx
+    /// Travel is scaled by how much the Mac screen is shrunk on this display, so content keeps
+    /// up with the finger on iPhone, and faster swipes scroll further (like macOS acceleration).
+    private func emitScrollSteps(dx: CGFloat, dy: CGFloat, speed: CGFloat? = nil) {
+        let fingerSpeed = speed ?? lastScrollSpeed
+        let framebufferRatio = max(1, remoteSize.width / max(1, screenLayer.frame.width))
+        let acceleration = 1 + min(2, max(0, (fingerSpeed - 250) / 700))
+        let gain = framebufferRatio * acceleration * scrollSpeed.multiplier / remotePixelsPerScrollTick
 
-        while abs(scrollAccumulatorY) >= scrollStepThreshold {
+        scrollAccumulatorY += dy * gain
+        scrollAccumulatorX += dx * gain
+
+        var ticks = 0
+        while abs(scrollAccumulatorY) >= 1, ticks < maxScrollTicksPerStep {
             let btn: RFBPointerButton = scrollAccumulatorY > 0 ? .scrollUp : .scrollDown
             client?.sendScroll(x: Int(cursorPoint.x), y: Int(cursorPoint.y), button: btn)
-            scrollAccumulatorY += scrollAccumulatorY > 0 ? -scrollStepThreshold : scrollStepThreshold
+            scrollAccumulatorY += scrollAccumulatorY > 0 ? -1 : 1
+            ticks += 1
         }
-        while abs(scrollAccumulatorX) >= scrollStepThreshold {
+        ticks = 0
+        while abs(scrollAccumulatorX) >= 1, ticks < maxScrollTicksPerStep {
             let btn: RFBPointerButton = scrollAccumulatorX > 0 ? .scrollLeft : .scrollRight
             client?.sendScroll(x: Int(cursorPoint.x), y: Int(cursorPoint.y), button: btn)
-            scrollAccumulatorX += scrollAccumulatorX > 0 ? -scrollStepThreshold : scrollStepThreshold
+            scrollAccumulatorX += scrollAccumulatorX > 0 ? -1 : 1
+            ticks += 1
         }
+        // Drop any backlog beyond the cap rather than replaying it later.
+        scrollAccumulatorY = max(-1, min(1, scrollAccumulatorY))
+        scrollAccumulatorX = max(-1, min(1, scrollAccumulatorX))
     }
 
     // MARK: - Scroll Momentum
 
     private func startScrollMomentum(velocity: CGPoint) {
         stopScrollMomentum()
-        let maxSpeed: CGFloat = 2400
+        let maxSpeed: CGFloat = 4000
         let v = CGPoint(
             x: max(-maxSpeed, min(maxSpeed, velocity.x)),
             y: max(-maxSpeed, min(maxSpeed, velocity.y))
         )
-        guard hypot(v.x, v.y) > 250, !UIAccessibility.isReduceMotionEnabled else {
+        guard hypot(v.x, v.y) > 200, !UIAccessibility.isReduceMotionEnabled else {
             resetScrollAccumulators()
             return
         }
@@ -847,12 +886,16 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
         let dt = min(1.0 / 30.0, link.timestamp - momentumLastTimestamp)
         momentumLastTimestamp = link.timestamp
 
-        emitScrollSteps(dx: momentumVelocity.x * dt, dy: momentumVelocity.y * dt)
+        emitScrollSteps(
+            dx: momentumVelocity.x * dt,
+            dy: momentumVelocity.y * dt,
+            speed: hypot(momentumVelocity.x, momentumVelocity.y)
+        )
 
-        let decay = pow(0.94, dt * 60)
+        let decay = pow(0.95, dt * 60)
         momentumVelocity.x *= decay
         momentumVelocity.y *= decay
-        if hypot(momentumVelocity.x, momentumVelocity.y) < 40 {
+        if hypot(momentumVelocity.x, momentumVelocity.y) < 30 {
             stopScrollMomentum()
         }
     }

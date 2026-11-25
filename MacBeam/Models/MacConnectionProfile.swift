@@ -28,6 +28,34 @@ public enum MacAuthPreference: String, Codable, CaseIterable, Identifiable, Send
     }
 }
 
+/// How far the Mac scrolls for a given finger movement.
+public enum ScrollSpeed: String, CaseIterable, Identifiable, Sendable {
+    case slow
+    case normal
+    case fast
+    case veryFast
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .slow: return "Slow"
+        case .normal: return "Normal"
+        case .fast: return "Fast"
+        case .veryFast: return "Very Fast"
+        }
+    }
+
+    public var multiplier: CGFloat {
+        switch self {
+        case .slow: return 0.6
+        case .normal: return 1.0
+        case .fast: return 1.6
+        case .veryFast: return 2.5
+        }
+    }
+}
+
 /// On-screen size of the remote Mac pointer.
 public enum PointerSize: String, CaseIterable, Identifiable, Sendable {
     case normal

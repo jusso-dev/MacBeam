@@ -164,7 +164,9 @@ struct RemoteSessionView: View {
             MacShortcutsSheet(
                 client: client,
                 stickyModifiers: $stickyModifiers,
-                onToast: showToast
+                onToast: showToast,
+                onSendClipboard: sendClipboardToMac,
+                onCopyMacClipboard: copyMacClipboard
             )
         }
     }
@@ -197,23 +199,7 @@ struct RemoteSessionView: View {
                 Button {
                     showSessionInfo = true
                 } label: {
-                    VStack(alignment: .leading, spacing: 1) {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(client.state.isConnected ? Color.green : Color.orange)
-                                .frame(width: 7, height: 7)
-                            Text(client.stats.serverName.isEmpty ? target.title : client.stats.serverName)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                        }
-                        if client.state.isConnected {
-                            Text("\(Int(client.stats.resolution.width))×\(Int(client.stats.resolution.height)) • \(client.stats.lastEncoding)")
-                                .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.white.opacity(0.75))
-                                .lineLimit(1)
-                        }
-                    }
+                    SessionTitleLabel(client: client, fallbackTitle: target.title)
                     .frame(minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
                 }
@@ -284,139 +270,17 @@ struct RemoteSessionView: View {
                 .accessibilityValue(isCompact ? "" : (showSpecialKeysBar ? "Shown" : "Hidden"))
                 .accessibilityAddTraits(!isCompact && showSpecialKeysBar ? .isSelected : [])
 
-                // Session Actions Menu
-                Menu {
-                    Section("Controls") {
-                        Button {
-                            showShortcutsSheet = true
-                        } label: {
-                            Label("All Mac Shortcuts…", systemImage: "command")
-                        }
-                        Button {
-                            toggleScrollMode()
-                        } label: {
-                            Label(isScrollMode ? "Turn Off Scroll Mode" : "Turn On Scroll Mode", systemImage: "arrow.up.and.down.and.arrow.left.and.right")
-                        }
-                        Button {
-                            togglePointerMode()
-                        } label: {
-                            Label(
-                                inputMode == .trackpad ? "Switch to Direct Touch" : "Switch to Trackpad",
-                                systemImage: inputMode == .trackpad ? PointerInputMode.directTouch.systemImage : PointerInputMode.trackpad.systemImage
-                            )
-                        }
-                        if client.state.isConnected {
-                            Button {
-                                hideToolbar()
-                            } label: {
-                                Label("Hide Toolbar", systemImage: "chevron.up")
-                            }
-                        }
-                    }
-
-                    Section("Scrolling") {
-                        Picker(selection: $scrollSpeed) {
-                            ForEach(ScrollSpeed.allCases) { speed in
-                                Text(speed.displayName).tag(speed)
-                            }
-                        } label: {
-                            Label("Scroll Speed", systemImage: "gauge.with.dots.needle.67percent")
-                        }
-                        .pickerStyle(.menu)
-                    }
-
-                    Section("Pointer") {
-                        Button {
-                            canvasController.locatePointer()
-                        } label: {
-                            Label("Find Pointer", systemImage: "cursorarrow.rays")
-                        }
-                        Picker(selection: $pointerSize) {
-                            ForEach(PointerSize.allCases) { size in
-                                Text(size.displayName).tag(size)
-                            }
-                        } label: {
-                            Label("Pointer Size", systemImage: "cursorarrow")
-                        }
-                        .pickerStyle(.menu)
-                    }
-
-                    Section("Mac Shortcuts") {
-                        Button {
-                            client.sendKeyTap(keySym: RFBKeySym.space, modifiers: [RFBKeySym.macCommand])
-                            showToast("Sent Spotlight (⌘Space)")
-                        } label: {
-                            Label("Spotlight (⌘ Space)", systemImage: "magnifyingglass")
-                        }
-                        Button {
-                            client.sendKeyTap(keySym: RFBKeySym.tab, modifiers: [RFBKeySym.macCommand])
-                        } label: {
-                            Label("App Switcher (⌘ Tab)", systemImage: "rectangle.stack")
-                        }
-                        Button {
-                            client.sendKeyTap(keySym: RFBKeySym.upArrow, modifiers: [RFBKeySym.macControl])
-                        } label: {
-                            Label("Mission Control (⌃ ↑)", systemImage: "macwindow.on.rectangle")
-                        }
-                        Button {
-                            client.sendKeyTap(keySym: RFBKeySym.escape, modifiers: [RFBKeySym.macCommand, RFBKeySym.macOption])
-                        } label: {
-                            Label("Force Quit (⌘⌥ Esc)", systemImage: "exclamationmark.triangle")
-                        }
-                    }
-
-                    Section("Clipboard") {
-                        Button {
-                            if let str = UIPasteboard.general.string, !str.isEmpty {
-                                client.sendClientCutText(str)
-                                showToast("Sent iOS clipboard to Mac")
-                            } else {
-                                showToast("iOS clipboard is empty")
-                            }
-                        } label: {
-                            Label("Send Clipboard to Mac", systemImage: "doc.on.clipboard")
-                        }
-                        Button {
-                            if !client.remoteClipboard.isEmpty {
-                                UIPasteboard.general.string = client.remoteClipboard
-                                showToast("Copied Mac clipboard")
-                            } else {
-                                showToast("No clipboard text received yet")
-                            }
-                        } label: {
-                            Label("Copy Mac Clipboard", systemImage: "clipboard")
-                        }
-                        Toggle("Auto-Sync Mac Clipboard", isOn: $autoCopyRemoteClipboard)
-                    }
-
-                    Section("Display") {
-                        Button {
-                            canvasController.fitToScreen()
-                        } label: {
-                            Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left")
-                        }
-                        Button {
-                            canvasController.toggleActualSize()
-                        } label: {
-                            Label("Toggle Zoom", systemImage: "plus.magnifyingglass")
-                        }
-                        Button {
-                            client.requestFullRefresh()
-                            showToast("Refreshed screen")
-                        } label: {
-                            Label("Force Screen Refresh", systemImage: "arrow.clockwise")
-                        }
-                        Button {
-                            showSessionInfo = true
-                        } label: {
-                            Label("Session Info", systemImage: "info.circle")
-                        }
-                    }
-                } label: {
-                    hudCircleIcon(systemName: "ellipsis", isActive: false)
-                }
-                .hoverEffect(.highlight)
-                .accessibilityLabel("Session Actions")
+                // Session Actions Menu (isolated so live frame/stats updates never rebuild it while open)
+                SessionActionsMenu(
+                    isConnected: client.state.isConnected,
+                    isScrollMode: isScrollMode,
+                    inputMode: inputMode,
+                    scrollSpeed: $scrollSpeed,
+                    pointerSize: $pointerSize,
+                    autoCopyRemoteClipboard: $autoCopyRemoteClipboard,
+                    perform: performMenuAction
+                )
+                .equatable()
 
                 // Hide Toolbar
                 if client.state.isConnected {
@@ -441,6 +305,55 @@ struct RemoteSessionView: View {
             .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.75))
             .frame(maxWidth: 720)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        }
+    }
+
+    private func performMenuAction(_ action: SessionMenuAction) {
+        switch action {
+        case .showAllShortcuts:
+            showShortcutsSheet = true
+        case .toggleScrollMode:
+            toggleScrollMode()
+        case .togglePointerMode:
+            togglePointerMode()
+        case .hideToolbar:
+            hideToolbar()
+        case .findPointer:
+            canvasController.locatePointer()
+        case .sendClipboardToMac:
+            sendClipboardToMac()
+        case .copyMacClipboard:
+            copyMacClipboard()
+        case .keyTap(let keySym, let modifiers, let toast):
+            client.sendKeyTap(keySym: keySym, modifiers: modifiers)
+            if let toast { showToast(toast) }
+        case .fitToScreen:
+            canvasController.fitToScreen()
+        case .toggleZoom:
+            canvasController.toggleActualSize()
+        case .refreshScreen:
+            client.requestFullRefresh()
+            showToast("Refreshed screen")
+        case .showSessionInfo:
+            showSessionInfo = true
+        }
+    }
+
+    private func sendClipboardToMac() {
+        if let str = UIPasteboard.general.string, !str.isEmpty {
+            client.sendClientCutText(str)
+            showToast("Sent iOS clipboard to Mac")
+        } else {
+            showToast("iOS clipboard is empty")
+        }
+    }
+
+    private func copyMacClipboard() {
+        if !client.remoteClipboard.isEmpty {
+            UIPasteboard.general.string = client.remoteClipboard
+            showToast("Copied Mac clipboard")
+        } else {
+            showToast("No clipboard text received yet")
         }
     }
 
@@ -758,26 +671,9 @@ struct RemoteSessionView: View {
     // MARK: - Sheets
 
     private var sessionInfoSheet: some View {
-        NavigationStack {
-            List {
-                LabeledContent("Server Name", value: client.stats.serverName)
-                LabeledContent("Protocol", value: client.stats.protocolVersion)
-                LabeledContent("Authentication", value: client.stats.securityMethod)
-                LabeledContent("Resolution", value: "\(Int(client.stats.resolution.width)) × \(Int(client.stats.resolution.height))")
-                LabeledContent("Active Encoding", value: client.stats.lastEncoding)
-                LabeledContent("Frame Rate", value: String(format: "%.1f fps", client.stats.framesPerSecond))
-                LabeledContent("Frames Received", value: "\(client.stats.totalFrames)")
-            }
-            .navigationTitle("Session Details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { showSessionInfo = false }
-                }
-            }
+        SessionInfoSheet(client: client) {
+            showSessionInfo = false
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
     }
 
     private var credentialsPromptSheet: some View {
@@ -943,5 +839,223 @@ struct RemoteSessionView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Isolated subviews (keep high-frequency updates away from the menu)
+
+enum SessionMenuAction {
+    case showAllShortcuts
+    case toggleScrollMode
+    case togglePointerMode
+    case hideToolbar
+    case findPointer
+    case sendClipboardToMac
+    case copyMacClipboard
+    case keyTap(UInt32, [UInt32], String?)
+    case fitToScreen
+    case toggleZoom
+    case refreshScreen
+    case showSessionInfo
+}
+
+/// The ⋯ menu. Equatable on its displayed values only, so it is not rebuilt (which resets
+/// the open menu's scroll position) when the session view re-renders for other reasons.
+private struct SessionActionsMenu: View, @MainActor Equatable {
+    let isConnected: Bool
+    let isScrollMode: Bool
+    let inputMode: PointerInputMode
+    @Binding var scrollSpeed: ScrollSpeed
+    @Binding var pointerSize: PointerSize
+    @Binding var autoCopyRemoteClipboard: Bool
+    let perform: (SessionMenuAction) -> Void
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.isConnected == rhs.isConnected
+            && lhs.isScrollMode == rhs.isScrollMode
+            && lhs.inputMode == rhs.inputMode
+            && lhs.scrollSpeed == rhs.scrollSpeed
+            && lhs.pointerSize == rhs.pointerSize
+            && lhs.autoCopyRemoteClipboard == rhs.autoCopyRemoteClipboard
+    }
+
+    var body: some View {
+        Menu {
+            Section("Clipboard") {
+                Button {
+                    perform(.sendClipboardToMac)
+                } label: {
+                    Label("Send Clipboard to Mac", systemImage: "doc.on.clipboard")
+                }
+                Button {
+                    perform(.copyMacClipboard)
+                } label: {
+                    Label("Copy Mac Clipboard", systemImage: "clipboard")
+                }
+                Toggle("Auto-Sync Mac Clipboard", isOn: $autoCopyRemoteClipboard)
+            }
+
+            Section("Controls") {
+                Button {
+                    perform(.showAllShortcuts)
+                } label: {
+                    Label("All Mac Shortcuts…", systemImage: "command")
+                }
+                Button {
+                    perform(.toggleScrollMode)
+                } label: {
+                    Label(isScrollMode ? "Turn Off Scroll Mode" : "Turn On Scroll Mode", systemImage: "arrow.up.and.down.and.arrow.left.and.right")
+                }
+                Button {
+                    perform(.togglePointerMode)
+                } label: {
+                    Label(
+                        inputMode == .trackpad ? "Switch to Direct Touch" : "Switch to Trackpad",
+                        systemImage: inputMode == .trackpad ? PointerInputMode.directTouch.systemImage : PointerInputMode.trackpad.systemImage
+                    )
+                }
+                if isConnected {
+                    Button {
+                        perform(.hideToolbar)
+                    } label: {
+                        Label("Hide Toolbar", systemImage: "chevron.up")
+                    }
+                }
+            }
+
+            Section("Mac Shortcuts") {
+                Button {
+                    perform(.keyTap(RFBKeySym.space, [RFBKeySym.macCommand], "Sent Spotlight (⌘Space)"))
+                } label: {
+                    Label("Spotlight (⌘ Space)", systemImage: "magnifyingglass")
+                }
+                Button {
+                    perform(.keyTap(RFBKeySym.tab, [RFBKeySym.macCommand], nil))
+                } label: {
+                    Label("App Switcher (⌘ Tab)", systemImage: "rectangle.stack")
+                }
+                Button {
+                    perform(.keyTap(RFBKeySym.upArrow, [RFBKeySym.macControl], nil))
+                } label: {
+                    Label("Mission Control (⌃ ↑)", systemImage: "macwindow.on.rectangle")
+                }
+                Button {
+                    perform(.keyTap(RFBKeySym.escape, [RFBKeySym.macCommand, RFBKeySym.macOption], nil))
+                } label: {
+                    Label("Force Quit (⌘⌥ Esc)", systemImage: "exclamationmark.triangle")
+                }
+            }
+
+            Section("Pointer & Scrolling") {
+                Button {
+                    perform(.findPointer)
+                } label: {
+                    Label("Find Pointer", systemImage: "cursorarrow.rays")
+                }
+                Picker(selection: $pointerSize) {
+                    ForEach(PointerSize.allCases) { size in
+                        Text(size.displayName).tag(size)
+                    }
+                } label: {
+                    Label("Pointer Size", systemImage: "cursorarrow")
+                }
+                .pickerStyle(.menu)
+                Picker(selection: $scrollSpeed) {
+                    ForEach(ScrollSpeed.allCases) { speed in
+                        Text(speed.displayName).tag(speed)
+                    }
+                } label: {
+                    Label("Scroll Speed", systemImage: "gauge.with.dots.needle.67percent")
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section("Display") {
+                Button {
+                    perform(.fitToScreen)
+                } label: {
+                    Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left")
+                }
+                Button {
+                    perform(.toggleZoom)
+                } label: {
+                    Label("Toggle Zoom", systemImage: "plus.magnifyingglass")
+                }
+                Button {
+                    perform(.refreshScreen)
+                } label: {
+                    Label("Force Screen Refresh", systemImage: "arrow.clockwise")
+                }
+                Button {
+                    perform(.showSessionInfo)
+                } label: {
+                    Label("Session Info", systemImage: "info.circle")
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 36, height: 36)
+                .background(Color.white.opacity(0.16), in: Circle())
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .hoverEffect(.highlight)
+        .accessibilityLabel("Session Actions")
+    }
+}
+
+/// Server name + live resolution/encoding. Reads `client.stats` so only this label re-renders.
+private struct SessionTitleLabel: View {
+    let client: RFBClient
+    let fallbackTitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(client.state.isConnected ? Color.green : Color.orange)
+                    .frame(width: 7, height: 7)
+                Text(client.stats.serverName.isEmpty ? fallbackTitle : client.stats.serverName)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+            }
+            if client.state.isConnected {
+                Text("\(Int(client.stats.resolution.width))×\(Int(client.stats.resolution.height)) • \(client.stats.lastEncoding)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.75))
+                    .lineLimit(1)
+            }
+        }
+    }
+}
+
+private struct SessionInfoSheet: View {
+    let client: RFBClient
+    let onDone: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            List {
+                LabeledContent("Server Name", value: client.stats.serverName)
+                LabeledContent("Protocol", value: client.stats.protocolVersion)
+                LabeledContent("Authentication", value: client.stats.securityMethod)
+                LabeledContent("Resolution", value: "\(Int(client.stats.resolution.width)) × \(Int(client.stats.resolution.height))")
+                LabeledContent("Active Encoding", value: client.stats.lastEncoding)
+                LabeledContent("Frame Rate", value: String(format: "%.1f fps", client.stats.framesPerSecond))
+                LabeledContent("Frames Received", value: "\(client.stats.totalFrames)")
+            }
+            .navigationTitle("Session Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", action: onDone)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }

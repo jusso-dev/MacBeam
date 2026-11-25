@@ -70,12 +70,6 @@ struct RemoteDisplayView: UIViewRepresentable {
         uiView.onSoftwareKeyboardChanged = onSoftwareKeyboardChanged
         controller.canvasView = uiView
         attachFrameSink(to: uiView)
-
-        uiView.updateRemoteCursor(
-            cursor: client.remoteCursor,
-            hasServerUpdate: client.hasServerCursorUpdate,
-            generation: client.cursorGeneration
-        )
     }
 
     /// Frames bypass SwiftUI entirely and go straight to the CALayer.
@@ -83,6 +77,14 @@ struct RemoteDisplayView: UIViewRepresentable {
         client.frameSink = { [weak view] image, generation in
             view?.updateFramebuffer(image: image, generation: generation)
         }
+        client.cursorSink = { [weak view] cursor, hasServerUpdate, generation in
+            view?.updateRemoteCursor(cursor: cursor, hasServerUpdate: hasServerUpdate, generation: generation)
+        }
+        view.updateRemoteCursor(
+            cursor: client.remoteCursor,
+            hasServerUpdate: client.hasServerCursorUpdate,
+            generation: client.cursorGeneration
+        )
     }
 }
 

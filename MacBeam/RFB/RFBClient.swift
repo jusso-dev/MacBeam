@@ -63,9 +63,11 @@ public final class RFBClient {
     /// Not observed: frames go straight to the canvas through `frameSink`, so SwiftUI
     /// does not re-render the session UI for every frame.
     @ObservationIgnored public private(set) var currentImage: CGImage?
-    public private(set) var remoteCursor: RFBCursor?
-    public private(set) var hasServerCursorUpdate = false
-    public private(set) var cursorGeneration: UInt64 = 0
+    @ObservationIgnored public private(set) var remoteCursor: RFBCursor?
+    @ObservationIgnored public private(set) var hasServerCursorUpdate = false
+    @ObservationIgnored public private(set) var cursorGeneration: UInt64 = 0
+    /// Fast path for cursor shape changes (bypasses SwiftUI, like `frameSink`).
+    @ObservationIgnored public var cursorSink: ((RFBCursor?, Bool, UInt64) -> Void)?
     public private(set) var remoteClipboard: String = ""
     public private(set) var lastBellTimestamp: Date?
 
@@ -262,6 +264,7 @@ public final class RFBClient {
         self.remoteCursor = nil
         self.hasServerCursorUpdate = false
         self.cursorGeneration &+= 1
+        self.cursorSink?(nil, false, self.cursorGeneration)
         self.heldPointerButtons = []
         self.currentFramebufferWidth = 1
         self.currentFramebufferHeight = 1
@@ -346,6 +349,7 @@ public final class RFBClient {
             remoteCursor = cursor
             hasServerCursorUpdate = true
             cursorGeneration &+= 1
+            cursorSink?(cursor, true, cursorGeneration)
         case .bell:
             lastBellTimestamp = Date()
             onBell?()

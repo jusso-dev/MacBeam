@@ -6,6 +6,8 @@ struct MacShortcutsSheet: View {
     let client: RFBClient
     @Binding var stickyModifiers: Set<UInt32>
     let onToast: (String) -> Void
+    var onSendClipboard: (() -> Void)? = nil
+    var onCopyMacClipboard: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
 
@@ -102,6 +104,27 @@ struct MacShortcutsSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if onSendClipboard != nil || onCopyMacClipboard != nil {
+                    Section("Clipboard") {
+                        if let onSendClipboard {
+                            Button {
+                                onSendClipboard()
+                                dismiss()
+                            } label: {
+                                Label("Send Clipboard to Mac", systemImage: "doc.on.clipboard")
+                            }
+                        }
+                        if let onCopyMacClipboard {
+                            Button {
+                                onCopyMacClipboard()
+                                dismiss()
+                            } label: {
+                                Label("Copy Mac Clipboard", systemImage: "clipboard")
+                            }
+                        }
+                    }
+                }
+
                 Section {
                     keyGrid(modifierKeys, isModifier: true)
                 } header: {

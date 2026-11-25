@@ -28,6 +28,31 @@ public enum MacAuthPreference: String, Codable, CaseIterable, Identifiable, Send
     }
 }
 
+/// On-screen size of the remote Mac pointer.
+public enum PointerSize: String, CaseIterable, Identifiable, Sendable {
+    case normal
+    case large
+    case extraLarge
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .normal: return "Normal"
+        case .large: return "Large"
+        case .extraLarge: return "Extra Large"
+        }
+    }
+
+    public var multiplier: CGFloat {
+        switch self {
+        case .normal: return 1.0
+        case .large: return 1.35
+        case .extraLarge: return 1.8
+        }
+    }
+}
+
 public enum PointerInputMode: String, Codable, CaseIterable, Identifiable, Sendable {
     case trackpad = "trackpad"
     case directTouch = "directTouch"

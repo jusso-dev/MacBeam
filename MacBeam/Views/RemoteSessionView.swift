@@ -16,6 +16,7 @@ struct RemoteSessionView: View {
 
     @State private var inputMode: PointerInputMode
     @State private var isScrollMode = false
+    @AppStorage("pointerSize") private var pointerSize: PointerSize = .large
     @State private var showShortcutsSheet = false
     @State private var isToolbarCollapsed = false
     /// Where the hidden-toolbar handle sits, as a fraction of the screen (persisted, draggable).
@@ -65,6 +66,7 @@ struct RemoteSessionView: View {
                 client: client,
                 inputMode: inputMode,
                 isScrollMode: isScrollMode,
+                pointerSize: pointerSize,
                 controller: canvasController,
                 activeModifiers: stickyModifiers,
                 bottomAccessoryInset: showsModifierBar ? 68 : 0,
@@ -308,6 +310,22 @@ struct RemoteSessionView: View {
                                 Label("Hide Toolbar", systemImage: "chevron.up")
                             }
                         }
+                    }
+
+                    Section("Pointer") {
+                        Button {
+                            canvasController.locatePointer()
+                        } label: {
+                            Label("Find Pointer", systemImage: "cursorarrow.rays")
+                        }
+                        Picker(selection: $pointerSize) {
+                            ForEach(PointerSize.allCases) { size in
+                                Text(size.displayName).tag(size)
+                            }
+                        } label: {
+                            Label("Pointer Size", systemImage: "cursorarrow")
+                        }
+                        .pickerStyle(.menu)
                     }
 
                     Section("Mac Shortcuts") {

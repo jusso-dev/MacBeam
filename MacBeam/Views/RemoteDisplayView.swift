@@ -14,6 +14,10 @@ final class RemoteCanvasController {
         canvasView?.toggleActualSizeZoom()
     }
 
+    func locatePointer() {
+        canvasView?.locatePointer()
+    }
+
     func setKeyboardVisible(_ visible: Bool) {
         if visible {
             canvasView?.becomeFirstResponder()
@@ -27,6 +31,7 @@ struct RemoteDisplayView: UIViewRepresentable {
     let client: RFBClient
     let inputMode: PointerInputMode
     let isScrollMode: Bool
+    let pointerSize: PointerSize
     let controller: RemoteCanvasController
     let activeModifiers: Set<UInt32>
     let bottomAccessoryInset: CGFloat
@@ -38,6 +43,7 @@ struct RemoteDisplayView: UIViewRepresentable {
         view.client = client
         view.inputMode = inputMode
         view.isScrollMode = isScrollMode
+        view.pointerSize = pointerSize
         view.bottomAccessoryInset = bottomAccessoryInset
         view.activeModifiersProvider = { activeModifiers }
         view.onConsumeStickyModifiers = onConsumeStickyModifiers
@@ -50,6 +56,7 @@ struct RemoteDisplayView: UIViewRepresentable {
         uiView.client = client
         uiView.inputMode = inputMode
         uiView.isScrollMode = isScrollMode
+        uiView.pointerSize = pointerSize
         uiView.bottomAccessoryInset = bottomAccessoryInset
         uiView.activeModifiersProvider = { activeModifiers }
         uiView.onConsumeStickyModifiers = onConsumeStickyModifiers
@@ -75,6 +82,11 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     var inputMode: PointerInputMode = .trackpad {
         didSet { updateCursorLayers() }
     }
+    var pointerSize: PointerSize = .large {
+        didSet {
+            if oldValue != pointerSize { updateCursorLayers() }
+        }
+    }
     /// When enabled, a one-finger drag scrolls the remote Mac (both axes, with momentum)
     /// and a two-finger drag pans the zoomed viewport. Designed for small iPhone screens.
     var isScrollMode = false {
@@ -98,6 +110,7 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
     private let screenLayer = CALayer()
     private let fallbackArrowLayer = CAShapeLayer()
     private let serverCursorLayer = CALayer()
+    private let locatorRingLayer = CAShapeLayer()
 
     private var remoteSize: CGSize = CGSize(width: 1280, height: 800)
     private var lastFrameGeneration: UInt64 = 0
@@ -186,8 +199,20 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
         screenLayer.addSublayer(fallbackArrowLayer)
 
         serverCursorLayer.contentsGravity = .resize
+        serverCursorLayer.magnificationFilter = .linear
         serverCursorLayer.isHidden = true
+        // Soft outline so the pointer stays visible on any background.
+        serverCursorLayer.shadowColor = UIColor.white.cgColor
+        serverCursorLayer.shadowOpacity = 0.9
+        serverCursorLayer.shadowRadius = 1.5
+        serverCursorLayer.shadowOffset = .zero
         screenLayer.addSublayer(serverCursorLayer)
+
+        locatorRingLayer.fillColor = UIColor.clear.cgColor
+        locatorRingLayer.strokeColor = UIColor.systemYellow.cgColor
+        locatorRingLayer.lineWidth = 3
+        locatorRingLayer.opacity = 0
+        screenLayer.addSublayer(locatorRingLayer)
 
         updateCursorLayers()
     }
@@ -427,14 +452,71 @@ final class RemoteCanvasView: UIView, UIKeyInput, UIGestureRecognizerDelegate {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         fallbackArrowLayer.position = CGPoint(x: lx, y: ly)
+        fallbackArrowLayer.setAffineTransform(CGAffineTransform(scaleX: pointerSize.multiplier, y: pointerSize.multiplier))
         if let cursor = currentServerCursor {
-            let cw = CGFloat(cursor.width) * scaleX
-            let ch = CGFloat(cursor.height) * scaleY
-            let hx = CGFloat(cursor.hotspotX) * scaleX
-            let hy = CGFloat(cursor.hotspotY) * scaleY
+            // Size the pointer on *screen*, not by framebuffer scale. A Mac framebuffer shrunk to fit
+            // an iPhone would otherwise turn the cursor into a few points and make it impossible to find.
+            let cursorScale = serverCursorDisplayScale(cursor: cursor, framebufferScale: scaleX)
+            let cw = CGFloat(cursor.width) * cursorScale
+            let ch = CGFloat(cursor.height) * cursorScale
+            let hx = CGFloat(cursor.hotspotX) * cursorScale
+            let hy = CGFloat(cursor.hotspotY) * cursorScale
             serverCursorLayer.frame = CGRect(x: lx - hx, y: ly - hy, width: cw, height: ch)
         }
+        locatorRingLayer.position = CGPoint(x: lx, y: ly)
         CATransaction.commit()
+    }
+
+    /// Keeps the cursor between a readable minimum and a sensible maximum on screen, whatever the zoom.
+    private func serverCursorDisplayScale(cursor: RFBCursor, framebufferScale: CGFloat) -> CGFloat {
+        let largestSide = CGFloat(max(cursor.width, cursor.height, 1))
+        let minScale = (28 * pointerSize.multiplier) / largestSide
+        let maxScale = (48 * pointerSize.multiplier) / largestSide
+        return min(maxScale, max(minScale, framebufferScale))
+    }
+
+    /// Brings the pointer into view (when zoomed) and pulses a ring around it.
+    func locatePointer() {
+        guard remoteSize.width > 0, remoteSize.height > 0 else { return }
+        if userZoomScale > 1.02 {
+            // Centre the viewport on the cursor.
+            let area = usableBounds
+            let f = screenLayer.frame
+            let cursorInView = CGPoint(
+                x: f.minX + (cursorPoint.x / remoteSize.width) * f.width,
+                y: f.minY + (cursorPoint.y / remoteSize.height) * f.height
+            )
+            panOffset.x += area.midX - cursorInView.x
+            panOffset.y += area.midY - cursorInView.y
+            if UIAccessibility.isReduceMotionEnabled {
+                layoutScreenLayer()
+            } else {
+                UIView.animate(withDuration: 0.25) { self.layoutScreenLayer() }
+            }
+        }
+        updateCursorLayers()
+
+        let radius: CGFloat = 30
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        locatorRingLayer.path = UIBezierPath(
+            ovalIn: CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2)
+        ).cgPath
+        CATransaction.commit()
+
+        locatorRingLayer.removeAllAnimations()
+        let scale = CABasicAnimation(keyPath: "transform.scale")
+        scale.fromValue = 2.4
+        scale.toValue = 0.6
+        let fade = CAKeyframeAnimation(keyPath: "opacity")
+        fade.values = [0, 1, 1, 0]
+        fade.keyTimes = [0, 0.15, 0.75, 1]
+        let group = CAAnimationGroup()
+        group.animations = [scale, fade]
+        group.duration = 0.7
+        group.repeatCount = UIAccessibility.isReduceMotionEnabled ? 1 : 2
+        locatorRingLayer.add(group, forKey: "locate")
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
     func resetZoomToFit() {
